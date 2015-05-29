@@ -3,7 +3,8 @@ package ch.lightbeam.philipp.addresslocator;
 /**
  * Created by philipp on 5/25/15.
  */
-public class AddressLocatorConstants {
+public class AddressLocatorConstants
+{
     public static final int SUCCESS_RESULT = 0;
     public static final int FAILURE_RESULT = 1;
     public static final String PACKAGE_NAME =

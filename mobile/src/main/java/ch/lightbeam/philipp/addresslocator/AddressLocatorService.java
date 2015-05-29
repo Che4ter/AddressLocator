@@ -1,6 +1,5 @@
 package ch.lightbeam.philipp.addresslocator;
 
-import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.Service;
@@ -14,15 +13,12 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
 import android.os.ResultReceiver;
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.NetworkResponse;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
@@ -30,27 +26,31 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 
-public class AddressLocatorService extends Service {
+public class AddressLocatorService extends Service
+{
 
     Intent mServiceIntent;
     private GPSCoordinatesResultReceiver mGPSResultReceiver;
 
-    public AddressLocatorService() {
+    public AddressLocatorService()
+    {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(Intent intent)
+    {
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
         System.out.println("Get Location");
-        mServiceIntent=intent;
+        mServiceIntent = intent;
         mGPSResultReceiver = new GPSCoordinatesResultReceiver(new Handler());
 
-        GetGPSCoordinates.startActionGetGPSCoordinates(this,AddressLocatorConstants.RECEIVER, mGPSResultReceiver);
+        GetGPSCoordinates.startActionGetGPSCoordinates(this, AddressLocatorConstants.RECEIVER, mGPSResultReceiver);
 
         System.out.println("End Location");
 
@@ -58,54 +58,34 @@ public class AddressLocatorService extends Service {
         return START_STICKY;
     }
 
-    class GPSCoordinatesResultReceiver extends ResultReceiver implements Parcelable {
-        public GPSCoordinatesResultReceiver(Handler handler) {
-            super(handler);
-        }
-
-        @Override
-        protected void onReceiveResult(int resultCode, Bundle resultData) {
-            System.out.println("GPS Coordinates Receive Result");
-            // Display the address string
-            // or an error message sent from the intent service.
-            Location lLocation = resultData.getParcelable(AddressLocatorConstants.RESULT_DATA_KEY);
-
-            System.out.println("ResultData" + lLocation.toString());
-            resolveAdress(lLocation);
-
-            // Show a toast message if an address was found.
-            if (resultCode == AddressLocatorConstants.SUCCESS_RESULT) {
-                System.out.println("Adress found" + lLocation.toString());
-            }
-
-        }
-    }
-
-    public  void resolveAdress(Location pLocation)
+    public void resolveAdress(Location pLocation)
     {
         System.out.println("Start resolving address");
 
 
         String url = String
-                .format(Locale.ENGLISH, "http://maps.googleapis.com/maps/api/geocode/json?latlng=%1$f,%2$f&language="
+                .format(Locale.getDefault(), "http://maps.googleapis.com/maps/api/geocode/json?latlng=%1$f,%2$f&language="
                         + Locale.getDefault().getCountry(), pLocation.getLatitude(), pLocation.getLongitude());
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(this);
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
-                (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+                (Request.Method.GET, url, null, new Response.Listener<JSONObject>()
+                {
 
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onResponse(JSONObject response)
+                    {
                         System.out.println("volley response");
                         displayAddressOutput(response);
                     }
-                }, new Response.ErrorListener() {
+                }, new Response.ErrorListener()
+                {
 
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // TODO Auto-generated method stub
-
+                    public void onErrorResponse(VolleyError error)
+                    {
+                        System.out.print("Error in resolving Adsress");
                     }
                 });
 
@@ -116,7 +96,7 @@ public class AddressLocatorService extends Service {
 
     public void displayAddressOutput(JSONObject pLocation)
     {
-        System.out.println("Display Notification"+pLocation);
+        System.out.println("Display Notification" + pLocation);
         String pAdress = getCurrentLocationViaJSON(pLocation);
         Bitmap bg = BitmapFactory.decodeResource(this.getResources(),
                 R.drawable.osm);
@@ -127,6 +107,7 @@ public class AddressLocatorService extends Service {
                 .setContentTitle("Current Address")
                 .setContentText(pAdress)
                 .extend(new Notification.WearableExtender().setBackground(bg))
+                .setDefaults(Notification.DEFAULT_ALL)
                 .build();
         NotificationManager notificationManger =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -134,9 +115,10 @@ public class AddressLocatorService extends Service {
         stopSelf();
     }
 
-    public  String getCurrentLocationViaJSON(JSONObject pAddress) {
+    public String getCurrentLocationViaJSON(JSONObject pAddress)
+    {
 
-        JSONObject jsonObj =pAddress;
+        JSONObject jsonObj = pAddress;
 
         String Address1 = "";
         String Address2 = "";
@@ -148,52 +130,99 @@ public class AddressLocatorService extends Service {
 
         String currentLocation = "";
 
-        try {
+        try
+        {
             String status = jsonObj.getString("status").toString();
 
-            if (status.equalsIgnoreCase("OK")) {
+            if (status.equalsIgnoreCase("OK"))
+            {
                 JSONArray Results = jsonObj.getJSONArray("results");
                 JSONObject zero = Results.getJSONObject(0);
                 JSONArray address_components = zero
                         .getJSONArray("address_components");
 
-                for (int i = 0; i < address_components.length(); i++) {
+                for (int i = 0; i < address_components.length(); i++)
+                {
                     JSONObject zero2 = address_components.getJSONObject(i);
                     String long_name = zero2.getString("long_name");
                     JSONArray mtypes = zero2.getJSONArray("types");
                     String Type = mtypes.getString(0);
 
-                    if (Type.equalsIgnoreCase("street_number")) {
+                    if (Type.equalsIgnoreCase("street_number"))
+                    {
                         Address1 = long_name + " ";
-                    } else if (Type.equalsIgnoreCase("route")) {
+                    }
+                    else if (Type.equalsIgnoreCase("route"))
+                    {
                         Address1 = Address1 + long_name;
-                    } else if (Type.equalsIgnoreCase("sublocality")) {
+                    }
+                    else if (Type.equalsIgnoreCase("sublocality"))
+                    {
                         Address2 = long_name;
-                    } else if (Type.equalsIgnoreCase("locality")) {
+                    }
+                    else if (Type.equalsIgnoreCase("locality"))
+                    {
                         // Address2 = Address2 + long_name + ", ";
                         City = long_name;
-                    } else if (Type
-                            .equalsIgnoreCase("administrative_area_level_2")) {
+                    }
+                    else if (Type
+                            .equalsIgnoreCase("administrative_area_level_2"))
+                    {
                         County = long_name;
-                    } else if (Type
-                            .equalsIgnoreCase("administrative_area_level_1")) {
+                    }
+                    else if (Type
+                            .equalsIgnoreCase("administrative_area_level_1"))
+                    {
                         State = long_name;
-                    } else if (Type.equalsIgnoreCase("country")) {
+                    }
+                    else if (Type.equalsIgnoreCase("country"))
+                    {
                         Country = long_name;
-                    } else if (Type.equalsIgnoreCase("postal_code")) {
+                    }
+                    else if (Type.equalsIgnoreCase("postal_code"))
+                    {
                         PIN = long_name;
                     }
 
                 }
 
-                currentLocation = Address1 + "," + Address2 + "," + City + ","+PIN+",\n"
-                        + State + "," + Country ;
+                currentLocation = Address1 + "," + Address2 + "," + City + "," + PIN + ",\n"
+                        + State + "," + Country;
 
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
 
         }
         return currentLocation;
 
+    }
+
+    class GPSCoordinatesResultReceiver extends ResultReceiver implements Parcelable
+    {
+        public GPSCoordinatesResultReceiver(Handler handler)
+        {
+            super(handler);
+        }
+
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData)
+        {
+            System.out.println("GPS Coordinates Receive Result");
+            // Display the address string
+            // or an error message sent from the intent service.
+            Location lLocation = resultData.getParcelable(AddressLocatorConstants.RESULT_DATA_KEY);
+
+            System.out.println("ResultData" + lLocation.toString());
+            resolveAdress(lLocation);
+
+            // Show a toast message if an address was found.
+            if (resultCode == AddressLocatorConstants.SUCCESS_RESULT)
+            {
+                System.out.println("Adress found" + lLocation.toString());
+            }
+
+        }
     }
 }

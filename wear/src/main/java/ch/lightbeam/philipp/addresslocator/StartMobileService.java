@@ -1,8 +1,8 @@
 package ch.lightbeam.philipp.addresslocator;
 
 import android.app.IntentService;
-import android.content.Intent;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -23,18 +23,25 @@ import com.google.android.gms.wearable.Wearable;
  */
 public class StartMobileService extends IntentService implements
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.OnConnectionFailedListener
+{
     // TODO: Rename actions, choose action names that describe tasks that this
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
     private static final String ACTION_STARTMOBILESERVICE = "ch.lightbeam.philipp.addresslocator.action.startmobileservice";
+    private static final String ADDRESSLOCATOR_WEAR_PATH = "/addresslocator-wear";
     private GoogleApiClient mGoogleApiClient;
     private Node mNode;
-    private static final String ADDRESSLOCATOR_WEAR_PATH = "/addresslocator-wear";
+
+    public StartMobileService()
+    {
+        super("StartMobileService");
+    }
 
     public static String getAction_StartMobilService()
     {
         return ACTION_STARTMOBILESERVICE;
     }
+
     /**
      * Starts this service to perform action Foo with the given parameters. If
      * the service is already performing a task this action will be queued.
@@ -42,23 +49,21 @@ public class StartMobileService extends IntentService implements
      * @see IntentService
      */
     // TODO: Customize helper method
-    public static void startActionStartMobileService(Context context) {
+    public static void startActionStartMobileService(Context context)
+    {
         Intent intent = new Intent(context, StartMobileService.class);
         intent.setAction(ACTION_STARTMOBILESERVICE);
         context.startService(intent);
     }
 
-
-
-    public StartMobileService() {
-        super("StartMobileService");
-    }
-
     @Override
-    protected void onHandleIntent(Intent intent) {
-        if (intent != null) {
+    protected void onHandleIntent(Intent intent)
+    {
+        if (intent != null)
+        {
             final String action = intent.getAction();
-            if (ACTION_STARTMOBILESERVICE.equals(action)) {
+            if (ACTION_STARTMOBILESERVICE.equals(action))
+            {
 
                 handleActionStartMobileService();
             }
@@ -69,7 +74,8 @@ public class StartMobileService extends IntentService implements
      * Handle action Foo in the provided background thread with the provided
      * parameters.
      */
-    private void handleActionStartMobileService() {
+    private void handleActionStartMobileService()
+    {
         System.out.println("Handle Mobile Service Intent");
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -84,23 +90,30 @@ public class StartMobileService extends IntentService implements
     {
         System.out.println("StartMobileService resolveNode");
 
-        Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>() {
+        Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).setResultCallback(new ResultCallback<NodeApi.GetConnectedNodesResult>()
+        {
             @Override
-            public void onResult(NodeApi.GetConnectedNodesResult nodes) {
-                for (Node node : nodes.getNodes()) {
+            public void onResult(NodeApi.GetConnectedNodesResult nodes)
+            {
+                for (Node node : nodes.getNodes())
+                {
                     mNode = node;
                 }
 
-                if (mNode != null && mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+                if (mNode != null && mGoogleApiClient != null && mGoogleApiClient.isConnected())
+                {
                     System.out.println("Try to start Mobile activity");
                     Wearable.MessageApi.sendMessage(
                             mGoogleApiClient, mNode.getId(), ADDRESSLOCATOR_WEAR_PATH, null).setResultCallback(
 
-                            new ResultCallback<MessageApi.SendMessageResult>() {
+                            new ResultCallback<MessageApi.SendMessageResult>()
+                            {
                                 @Override
-                                public void onResult(MessageApi.SendMessageResult sendMessageResult) {
+                                public void onResult(MessageApi.SendMessageResult sendMessageResult)
+                                {
 
-                                    if (!sendMessageResult.getStatus().isSuccess()) {
+                                    if (!sendMessageResult.getStatus().isSuccess())
+                                    {
                                         Log.e("TAG", "Failed to send message with status code: "
                                                 + sendMessageResult.getStatus().getStatusCode());
                                         System.out.println("Failed to send mesage");
@@ -116,27 +129,33 @@ public class StartMobileService extends IntentService implements
             }
         });
     }
-    protected void onResume() {
+
+    protected void onResume()
+    {
         mGoogleApiClient.connect();
         System.out.println("StartMobileService onresume");
 
     }
 
-    protected void onPause() {
+    protected void onPause()
+    {
         System.out.println("StartMobileService onpause");
-        if (mGoogleApiClient.isConnected()) {
+        if (mGoogleApiClient.isConnected())
+        {
 
         }
         mGoogleApiClient.disconnect();
     }
 
     @Override
-    public void onConnectionSuspended(int i) {
+    public void onConnectionSuspended(int i)
+    {
         System.out.println("StartMobileService onconnectionsuspended");
     }
 
     @Override
-    public void onConnected(Bundle bundle) {
+    public void onConnected(Bundle bundle)
+    {
         System.out.println("StartMobileService onconnected");
         resolveNode();
     }
