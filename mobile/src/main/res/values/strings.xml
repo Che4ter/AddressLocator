@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Address Locator</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="adresssearchbuttonlabel">Search Current Address</string>
+    <string name="addressresult" />
+</resources>
